@@ -1,78 +1,101 @@
 "use strict";
 
-const valueOrJson = require("value-or-json");
-const assert = require("assert");
+const SetOfValues = require("./set-of-values");
 import test from "ava";
 
-test("fail on no args", t => {
-  t.throws(() => {
-    valueOrJson();
-  }, assert.AssertionError);
+test("basic", t => {
+  const objValue = { a: "a" };
+  const duplicateValue = { a: "a" };
+  const duplicateValueButNeverAdded = { a: "a" };
+
+  // Empty.
+
+  const plainSet = new Set();
+  const setOfValues = new SetOfValues();
+  setOfValues.retainOrginalReferences();
+
+  t.is(plainSet.size, 0);
+  t.is(setOfValues.size, 0);
+
+  t.false(plainSet.has(objValue));
+  t.false(setOfValues.has(objValue));
+
+  t.false(plainSet.has(duplicateValue));
+  t.false(setOfValues.has(duplicateValue));
+
+  t.false(plainSet.has(duplicateValueButNeverAdded));
+  t.false(setOfValues.has(duplicateValueButNeverAdded));
+
+  // One entry.
+
+  plainSet.add(objValue);
+  setOfValues.add(objValue);
+
+  t.is(plainSet.size, 1);
+  t.is(setOfValues.size, 1);
+
+  t.true(plainSet.has(objValue));
+  t.true(setOfValues.has(objValue));
+
+  t.false(plainSet.has(duplicateValue));
+  t.true(setOfValues.has(duplicateValue));
+
+  t.false(plainSet.has(duplicateValueButNeverAdded));
+  t.true(setOfValues.has(duplicateValueButNeverAdded));
+
+  // Add the same object twice.
+
+  plainSet.add(objValue);
+  setOfValues.add(objValue);
+
+  t.is(plainSet.size, 1);
+  t.is(setOfValues.size, 1);
+
+  t.true(plainSet.has(objValue));
+  t.true(setOfValues.has(objValue));
+
+  t.false(plainSet.has(duplicateValue));
+  t.true(setOfValues.has(duplicateValue));
+
+  t.false(plainSet.has(duplicateValueButNeverAdded));
+  t.true(setOfValues.has(duplicateValueButNeverAdded));
+
+  // Add another object with same value.
+
+  plainSet.add(duplicateValue);
+  setOfValues.add(duplicateValue);
+
+  t.is(plainSet.size, 2);
+  t.is(setOfValues.size, 1);
+
+  t.true(plainSet.has(objValue));
+  t.true(plainSet.has(duplicateValue));
+
+  t.true(setOfValues.has(objValue));
+  t.true(setOfValues.has(duplicateValue));
+
+  t.false(plainSet.has(duplicateValueButNeverAdded));
+  t.true(setOfValues.has(duplicateValueButNeverAdded));
+
+  // originalReferences functionality.
+
+  t.deepEqual(setOfValues.values().next().value, JSON.stringify(objValue));
+  t.deepEqual(setOfValues.originalReferences.values().next().value, objValue);
+
+  // Delete the duplicate value.
+
+  plainSet.delete(duplicateValue);
+  setOfValues.delete(duplicateValue);
+
+  t.is(plainSet.size, 1);
+  t.is(setOfValues.size, 0);
+
+  t.true(plainSet.has(objValue));
+  t.false(plainSet.has(duplicateValue));
+
+  t.false(setOfValues.has(objValue));
+  t.false(setOfValues.has(duplicateValue));
+
+  t.false(plainSet.has(duplicateValueButNeverAdded));
+  t.false(setOfValues.has(duplicateValueButNeverAdded));
 });
-
-test("string", t => {
-  needsStringifyAndDeepEqual(t, "", false, "");
-  needsStringifyAndDeepEqual(t, "a", false, "a");
-});
-
-test("number", t => {
-  needsStringifyAndDeepEqual(t, 0, false, 0);
-  needsStringifyAndDeepEqual(t, -0, false, -0);
-  needsStringifyAndDeepEqual(t, 1, false, 1);
-  needsStringifyAndDeepEqual(t, Number.MIN_VALUE, false, Number.MIN_VALUE);
-  needsStringifyAndDeepEqual(t, Number.MAX_VALUE, false, Number.MAX_VALUE);
-  needsStringifyAndDeepEqual(
-    t,
-    Number.NEGATIVE_INFINITY,
-    false,
-    Number.NEGATIVE_INFINITY
-  );
-  needsStringifyAndDeepEqual(
-    t,
-    Number.POSITIVE_INFINITY,
-    false,
-    Number.POSITIVE_INFINITY
-  );
-  needsStringifyAndDeepEqual(t, NaN, false, NaN);
-});
-
-test("boolean", t => {
-  needsStringifyAndDeepEqual(t, true, false, true);
-  needsStringifyAndDeepEqual(t, false, false, false);
-});
-
-test("symbol", t => {
-  const emptySym1 = Symbol();
-  const emptySym2 = Symbol();
-  needsStringifyAndDeepEqual(t, emptySym1, false, emptySym1);
-  t.notDeepEqual(valueOrJson(emptySym1), emptySym2);
-
-  const symWithDesc1 = Symbol("symWithDesc1");
-  const symWithDesc2 = Symbol("symWithDesc2");
-  needsStringifyAndDeepEqual(t, symWithDesc1, false, symWithDesc1);
-  t.notDeepEqual(valueOrJson(symWithDesc1), symWithDesc2);
-});
-
-test("undefined", t => {
-  needsStringifyAndDeepEqual(t, undefined, false, undefined);
-});
-
-test("function", t => {
-  needsStringifyAndDeepEqual(t, f, false, f);
-  function f() {}
-});
-
-test("object", t => {
-  needsStringifyAndDeepEqual(t, {}, true, "{}");
-  needsStringifyAndDeepEqual(t, { key: "value" }, true, '{"key":"value"}');
-});
-
-function needsStringifyAndDeepEqual(
-  t,
-  value,
-  expectedStringify,
-  expectedValue
-) {
-  t.is(valueOrJson.needsStringify(value), expectedStringify);
-  t.deepEqual(valueOrJson(value), expectedValue);
-}
