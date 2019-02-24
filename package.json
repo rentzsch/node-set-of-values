@@ -1,7 +1,7 @@
 {
-  "name": "node-set-of-values",
+  "name": "set-of-values",
   "description": "subclass of Set that works like you think it should with Objects",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "set-of-values.js",
   "license": "MIT",
   "repository": "git@github.com:rentzsch/node-set-of-values.git",
