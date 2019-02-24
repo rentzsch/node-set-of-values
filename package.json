@@ -1,0 +1,17 @@
+{
+  "name": "node-set-of-values",
+  "description": "subclass of Set that works like you think it should with Objects",
+  "version": "0.1.0",
+  "main": "set-of-values.js",
+  "license": "MIT",
+  "repository": "git@github.com:rentzsch/node-set-of-values.git",
+  "dependencies": {
+    "value-or-json": "^0.1.0"
+  },
+  "devDependencies": {
+    "ava": "^1.2.1"
+  },
+  "scripts": {
+    "test": "ava *-test.js"
+  }
+}
